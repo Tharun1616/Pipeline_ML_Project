@@ -3,4 +3,7 @@ Flask
 numpy
 scikit-learn
 seaborn
+plotly
+pandas_ta
+tensorflow
 -e .

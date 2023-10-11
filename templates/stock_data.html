@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    {% include "nav.html" %}
+    <div class="container mt-5">
+        {% if message %}
+        <b><p>{{ message }}</p></b>
+        {% endif %}
+
+        <!-- Display the HTML table here -->
+    
+
+        <button type="button" class="btn btn-outline-primary mr-4" id="showTop10">Show Top 10 Rows</button>
+        <button type="button" class="btn btn-outline-secondary mr-4" id="showBot10">Show Bottom 10 Rows</button>
+        <button type="button" class="btn btn-outline-success mr-4" id="showDescription">Show Description</button>
+        <button type="button" class="btn btn-outline-info mr-4" id="FullDataView">View Complete Data</button>
+
+
+        <div class="row-auto mt-4" id="top10Data" style="display: none;">
+            {{ top10_data|safe }}
+        </div>
+        <div  class="row-auto mt-4" id="bot10_data" style="display: none;">
+            {{ bot10_data|safe }}
+        </div>
+        <div class="row-auto mt-4" id="descriptionData" style="display: none;">
+            {{ description_data|safe }}
+        </div>
+        <div class="table-responsive mt-4" id="table_html" style="display: none;">
+            {{ table_html | safe }} <!-- Use the safe filter to render HTML content -->
+        </div>
+    </div>
+    <script>
+        document.getElementById('showTop10').addEventListener('click', function() {
+            document.getElementById('top10Data').style.display = 'block';
+            document.getElementById('bot10_data').style.display = 'none';
+            document.getElementById('descriptionData').style.display = 'none';
+            document.getElementById('table_html').style.display = 'none';
+        });
+
+        document.getElementById('showBot10').addEventListener('click', function() {
+            document.getElementById('bot10_data').style.display = 'block';
+            document.getElementById('top10Data').style.display = 'none';
+            document.getElementById('descriptionData').style.display = 'none';
+            document.getElementById('table_html').style.display = 'none';
+        });
+
+        document.getElementById('showDescription').addEventListener('click', function() {
+            document.getElementById('descriptionData').style.display = 'block';
+            document.getElementById('bot10_data').style.display = 'none';
+            document.getElementById('top10Data').style.display = 'none';
+            document.getElementById('table_html').style.display = 'none';
+        });
+
+        document.getElementById('FullDataView').addEventListener('click', function() {
+            document.getElementById('table_html').style.display = 'block';
+            document.getElementById('bot10_data').style.display = 'none';
+            document.getElementById('top10Data').style.display = 'none';
+            document.getElementById('descriptionData').style.display = 'none';
+        });
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    
+    
+</body>
+</html>

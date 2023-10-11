@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visualization Charts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    {% include "nav.html" %}
+
+    <ul class="nav nav-pills nav-fill mt-3" id="chartTabs" role="tablist">
+        <li class="nav-item">
+            <a class="navbar-brand" href="#Close_Vol">Close_Vol</a>
+        <li class="nav-item">
+            <a class="navbar-brand" href="#CandleStick">CandleStick</a>
+        <li class="nav-item">
+            <a class="navbar-brand" href="#SMA">SMA</a>
+        </li>
+        <li class="nav-item">
+            <a class="navbar-brand" href="#EMA">EMA</a>
+        </li>
+    </ul>
+
+    <div id="Close_Vol">
+        {% if close_vol_chart is defined and close_vol_chart is not none%}
+        <!-- Insert the Plotly chart here -->
+        <iframe src="{{ close_vol_chart }}" width="1400" height="500"></iframe>
+        {% endif %}
+    </div>
+
+    <div id="CandleStick">
+    {% if candlestick_chart is defined and candlestick_chart is not none%}
+        <iframe src="{{ candlestick_chart }}" width="1400" height="500"></iframe>
+    {% endif %}
+    </div>
+
+    <div id="SMA">
+        {% if sma_chart is defined and sma_chart is not none%}
+        <iframe src="{{ sma_chart }}" width="1400" height="500"></iframe>
+    1   {% endif %}
+    </div>
+
+    <div id="EMA">
+        {% if ema_chart is defined and ema_chart is not none%}
+        <!-- Insert the Plotly chart here -->
+        <iframe src="{{ ema_chart }}" width="1400" height="500"></iframe>
+        {% endif %}
+    </div>
+
+
+</body>
+</html>
