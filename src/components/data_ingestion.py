@@ -28,6 +28,7 @@ class DataIngestion():
         try:
             logging.info("Data Reading using Pandas library from local system")
             data = yf.download(tickers=stock_name, period="5y", interval='1d')
+            print("Data_Ingestion")
             print(data.tail(2))
             # data = pd.read_csv(os.path.join("notebook/data", "bats_symbols.csv"))
             logging.info("Data Reading completed")

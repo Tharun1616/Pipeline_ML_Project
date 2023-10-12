@@ -13,348 +13,354 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 
-stock_dataset = pd.read_csv(os.path.join(
-    "artifacts/data_ingestion", "raw.csv"))
 
-static_dir = 'static'
+@dataclass
+class DataTransformationConfig:
+    static_dir = 'static'
 
-print(stock_dataset.tail(2))
 
-def vol_close_chart():
-    fig = go.Figure()
-    stock_plot = go.Scatter(
-        x=stock_dataset['Date'], y=stock_dataset['Close'], name="Close_Price")
-    
-    print(stock_dataset.tail(2))
+class DataTransformation():
+    def __init__(self):
+        self.transformation_config = DataTransformationConfig()
 
-    # Plot price changes
-    fig.add_trace(stock_plot)
+    def vol_close_chart(self, ticker, s_data):
 
-    # Plot volume as bar graph
-    fig.add_trace(go.Bar(x=stock_dataset['Date'],
-                  y=stock_dataset['Volume']/200000, name='Volume Traded'))
+        print("DataTransdormation")
+        print(s_data.tail(2))
 
-    fig.update_xaxes(title="Date", rangeslider_visible=True)
-    fig.update_yaxes(title="Price")
-    #fig.update_layout(height=600, width=1200, showlegend=True)
-    fig.update_layout(title='Close-Volume Chart')
-    chart_filename = 'close_vol_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    # chart_path = "static/close_vol_chart.html"
-    plot(fig, filename=chart_path, auto_open=False)
+        fig = go.Figure()
+        stock_plot = go.Scatter(
+            x=s_data['Date'], y=s_data['Close'], name="Close_Price")
 
-    return chart_path
+        # Plot price changes
+        fig.add_trace(stock_plot)
 
+        # Plot volume as bar graph
+        fig.add_trace(go.Bar(x=s_data['Date'],y=s_data['Volume']/200000, name='Volume Traded'))
 
-candle = go.Candlestick(x=stock_dataset['Date'], open=stock_dataset['Open'],
-                        high=stock_dataset['High'], low=stock_dataset['Low'],
-                        close=stock_dataset['Close'], name='Candlestick')
+        fig.update_xaxes(title="Date", rangeslider_visible=True)
+        fig.update_yaxes(title="Price")
+        #fig.update_layout(height=600, width=1200, showlegend=True)
+        fig.update_layout(title='Close-Volume Chart '+ticker)
+        chart_filename = 'close_vol_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        # chart_path = "static/close_vol_chart.html"
+        plot(fig, filename=chart_path, auto_open=False)
 
+        return chart_path
 
-def candlestick_chart():
-    fig = go.Figure()
+    def candlestick_chart(self, ticker, candle, ):
+        fig = go.Figure()
 
-    # Define candlestick and moving average lines
+        # Define candlestick and moving average lines
 
-    fig.add_trace(candle)
-    fig.update_layout(title='CandleStick Chart')
-    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+        fig.add_trace(candle)
+        fig.update_layout(title='CandleStick Chart '+ticker)
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
 
-    chart_filename = 'candlestick_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    plot(fig, filename=chart_path, auto_open=False)
+        chart_filename = 'candlestick_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
 
-    return chart_path
+        return chart_path
 
+    # Simple Moving Avg
 
-sma_periods = [20, 50, 100, 200]
-ema_periods = [5, 9, 21, 50, 100, 200]
+    def SMA_chart(self,ticker,s_data,candle):
 
+        sma_periods = [20, 50, 100, 200]
 
-def SMA(data, period, column='Close'):
-    return data[column].rolling(window=period).mean()
+        def SMA(data, period, column='Close'):
+            sma = data[column].rolling(window=period).mean()
+            return sma
 
+        fig = go.Figure()
+        sma20 = go.Scatter(x=s_data['Date'], y=SMA(s_data, period=sma_periods[0]),
+                           line=dict(color='green', width=1), name="SMA20")
 
-def EMA(data, period, column='Close'):
-    return data[column].ewm(span=period, adjust=False).mean()
+        sma50 = go.Scatter(x=s_data['Date'], y=SMA(s_data, period=sma_periods[1]),
+                           line=dict(color='orange', width=1), name="SMA50")
 
-# Simple Moving Avg
+        sma100 = go.Scatter(x=s_data['Date'], y=SMA(s_data, period=sma_periods[2]),
+                            line=dict(color='violet', width=1), name="SMA100")
 
+        sma200 = go.Scatter(x=s_data['Date'], y=SMA(s_data, period=sma_periods[3]),
+                            line=dict(color='yellow', width=1), name="SMA200")
 
-def SMA_chart():
+        # Add plots to the figure
+        fig.add_trace(candle)
+        fig.add_trace(sma20)
+        fig.add_trace(sma50)
+        fig.add_trace(sma100)
+        fig.add_trace(sma200)
 
-    fig = go.Figure()
-    sma20 = go.Scatter(x=stock_dataset['Date'], y=SMA(stock_dataset, period=sma_periods[0]),
-                       line=dict(color='green', width=1), name="SMA20")
+        # Add title
+        fig.update_layout(title="SMA Chart "+ticker)
 
-    sma50 = go.Scatter(x=stock_dataset['Date'], y=SMA(stock_dataset, period=sma_periods[1]),
-                       line=dict(color='orange', width=1), name="SMA50")
+        # Get rid of empty dates on the weekend
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
 
-    sma100 = go.Scatter(x=stock_dataset['Date'], y=SMA(stock_dataset, period=sma_periods[2]),
-                        line=dict(color='violet', width=1), name="SMA100")
+        chart_filename = 'SMA_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
 
-    sma200 = go.Scatter(x=stock_dataset['Date'], y=SMA(stock_dataset, period=sma_periods[3]),
-                        line=dict(color='yellow', width=1), name="SMA200")
+        return chart_path
 
-    # Add plots to the figure
-    fig.add_trace(candle)
-    fig.add_trace(sma20)
-    fig.add_trace(sma50)
-    fig.add_trace(sma100)
-    fig.add_trace(sma200)
+    # Exponential Moving Avg
 
-    # Add title
-    fig.update_layout(title="SMA Chart")
+    def EMA_chart(self,ticker,s_data,candle):
 
-    # Get rid of empty dates on the weekend
-    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+        ema_periods = [5, 9, 21, 50, 100, 200]
 
-    chart_filename = 'SMA_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    plot(fig, filename=chart_path, auto_open=False)
+        def EMA(data, period, column='Close'):
+            return data[column].ewm(span=period, adjust=False).mean()
 
-    return chart_path
+        fig = go.Figure()
 
-# Exponential Moving Avg
+        ema5 = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=ema_periods[0]),
+                          line=dict(color='green', width=1), name="EMA05")
 
+        ema9 = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=ema_periods[1]),
+                          line=dict(color='orange', width=1), name="EMA09")
 
-def EMA_chart():
+        ema21 = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=ema_periods[2]),
+                           line=dict(color='violet', width=1), name="EMA21")
 
-    fig = go.Figure()
+        ema50 = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=ema_periods[3]),
+                           line=dict(color='yellow', width=1), name="EMA50")
 
-    ema5 = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=ema_periods[0]),
-                      line=dict(color='green', width=1), name="EMA05")
+        ema100 = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=ema_periods[4]),
+                            line=dict(color='brown', width=1), name="EMA100")
 
-    ema9 = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=ema_periods[1]),
-                      line=dict(color='orange', width=1), name="EMA09")
+        ema200 = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=ema_periods[5]),
+                            line=dict(color='blue', width=1), name="EMA200")
 
-    ema21 = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=ema_periods[2]),
-                       line=dict(color='violet', width=1), name="EMA21")
+        # Add plots to the figure
+        fig.add_trace(candle)
+        fig.add_trace(ema5)
+        fig.add_trace(ema9)
+        fig.add_trace(ema21)
+        fig.add_trace(ema50)
+        fig.add_trace(ema100)
+        fig.add_trace(ema200)
+        # Add title
+        fig.update_layout(title="EMA Chart "+ticker)
 
-    ema50 = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=ema_periods[3]),
-                       line=dict(color='yellow', width=1), name="EMA50")
+        # Get rid of empty dates on the weekend
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
 
-    ema100 = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=ema_periods[4]),
-                        line=dict(color='brown', width=1), name="EMA100")
+        chart_filename = 'EMA_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
 
-    ema200 = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=ema_periods[5]),
-                        line=dict(color='blue', width=1), name="EMA200")
+        return chart_path
 
-    # Add plots to the figure
-    fig.add_trace(candle)
-    fig.add_trace(ema5)
-    fig.add_trace(ema9)
-    fig.add_trace(ema21)
-    fig.add_trace(ema50)
-    fig.add_trace(ema100)
-    fig.add_trace(ema200)
-    # Add title
-    fig.update_layout(title="EMA Chart")
+    # Bollinger Bands
 
-    # Get rid of empty dates on the weekend
-    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+    def sma_BB(self,s_data,candle):
+        st_df = s_data.copy()
 
-    chart_filename = 'EMA_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    plot(fig, filename=chart_path, auto_open=False)
+        # rolling std for calculating the higher band and lower band
+        st_df['SD'] = st_df['Close'].rolling(window=20).std()
 
-    return chart_path
+        st_df['bb_sma_20'] = st_df['Close'].rolling(window=20).mean()
 
+        # Higher and Lower Bands
+        st_df['BB_Sma_High'] = st_df['bb_sma_20'] + (2 * st_df['SD'])
+        st_df['BB_Sma_Low'] = st_df['bb_sma_20'] - (2 * st_df['SD'])
 
+        fig = go.Figure()
+        sma20 = go.Scatter(x=st_df['Date'], y=st_df['bb_sma_20'],
+                           line=dict(color='blue', width=1), name="SMA20")
 
-## Custom Chart
-# def custom_sma_ema(s_period, e_period):
-#     fig = go.Figure()
+        bb_high = go.Scatter(x=st_df['Date'], y=st_df['BB_Sma_High'],
+                             line=dict(color='green', width=1), name="BB High")
 
-#     sma = go.Scatter(x=stock_dataset['Date'], y=SMA(stock_dataset, period=s_period),
-#                      line=dict(color='green', width=1), name="SMA")
+        bb_low = go.Scatter(x=st_df['Date'], y=st_df['BB_Sma_Low'],
+                            line=dict(color='orange', width=1), name="BB Low")
 
-#     ema = go.Scatter(x=stock_dataset['Date'], y=EMA(stock_dataset, period=e_period),
-#                      line=dict(color='green', width=1), name="EMA")
+        # Add plots to the figure
+        fig.add_trace(candle)
+        fig.add_trace(sma20)
+        fig.add_trace(bb_high)
+        fig.add_trace(bb_low)
 
-#     fig.add_trace(candle)
-#     fig.add_trace(sma)
-#     fig.add_trace(ema)
+        # Add title
+        fig.update_layout(title="Bollinger Bands(SMA)")
 
-#     fig.update_layout(title="Custom SMA+EMA Chart")
+        # Get rid of empty dates on the weekend
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
 
-#     # Get rid of empty dates on the weekend
-#     fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+        chart_filename = 'SMA_BB_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
 
-#     chart_filename = 'SMA+EMA_chart.html'
-#     chart_path = os.path.join(static_dir, chart_filename)
-#     plot(fig, filename=chart_path, auto_open=False)
-#     return chart_path
+        return chart_path
 
+    def ema_BB(self,s_data,candle):
+        
+        st_df_e = s_data.copy()
 
-# Bollinger Bands
+        # rolling std for calculating the higher band and lower band
+        st_df_e['SD'] = st_df_e['Close'].rolling(window=20).std()
 
+        st_df_e['bb_ema_21'] = st_df_e['Close'].ewm(
+            span=21, adjust=False).mean()
 
-st_df = stock_dataset.copy()
+        # Higher and Lower Bands
+        st_df_e['BB_Ema_High'] = st_df_e['bb_ema_21'] + (2 * st_df_e['SD'])
+        st_df_e['BB_Ema_Low'] = st_df_e['bb_ema_21'] - (2 * st_df_e['SD'])
 
-# rolling std for calculating the higher band and lower band
-st_df['SD'] = st_df['Close'].rolling(window=20).std()
+        fig = go.Figure()
+        ema21 = go.Scatter(x=st_df_e['Date'], y=st_df_e['bb_ema_21'],
+                           line=dict(color='blue', width=1), name="EMA21")
 
+        bb_high = go.Scatter(x=st_df_e['Date'], y=st_df_e['BB_Ema_High'],
+                             line=dict(color='green', width=1), name="BB High")
 
-def sma_BB():
+        bb_low = go.Scatter(x=st_df_e['Date'], y=st_df_e['BB_Ema_Low'],
+                            line=dict(color='orange', width=1), name="BB Low")
 
-    st_df['bb_sma_20'] = st_df['Close'].rolling(window=20).mean()
+        # Add plots to the figure
+        fig.add_trace(candle)
+        fig.add_trace(ema21)
+        fig.add_trace(bb_high)
+        fig.add_trace(bb_low)
 
-    # Higher and Lower Bands
-    st_df['BB_Sma_High'] = st_df['bb_sma_20'] + (2 * st_df['SD'])
-    st_df['BB_Sma_Low'] = st_df['bb_sma_20'] - (2 * st_df['SD'])
+        # Add title
+        fig.update_layout(title="Bollinger Bands(EMA)")
 
-    fig = go.Figure()
-    sma20 = go.Scatter(x=st_df['Date'], y=SMA(st_df, period=20),
-                       line=dict(color='blue', width=1), name="SMA20")
+        # Get rid of empty dates on the weekend
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
 
-    bb_high = go.Scatter(x=st_df['Date'], y=st_df['BB_Sma_High'],
-                         line=dict(color='green', width=1), name="BB High")
+        chart_filename = 'EMA_BB_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
 
-    bb_low = go.Scatter(x=st_df['Date'], y=st_df['BB_Sma_Low'],
-                        line=dict(color='orange', width=1), name="BB Low")
+        return chart_path
 
-    # Add plots to the figure
-    fig.add_trace(candle)
-    fig.add_trace(sma20)
-    fig.add_trace(bb_high)
-    fig.add_trace(bb_low)
+    # Ichimoku
 
-    # Add title
-    fig.update_layout(title="Bollinger Bands(SMA)")
+    def get_fill_color(label):
+        if label >= 1:
+            return 'rgba(0,250,0,0.4)'
+        else:
+            return 'rgba(250,0,0,0.4)'
 
-    # Get rid of empty dates on the weekend
-    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+    def ichimoku(self,s_data,candle):
+        st_df_i = s_data.copy()
+        ic_df = s_data.copy()
 
-    chart_filename = 'SMA_BB_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    plot(fig, filename=chart_path, auto_open=False)
+        ichimoku = pta.ichimoku(high=st_df_i['High'], low=st_df_i['Low'], close=st_df_i['Close'],
+                                tenkan=9, kijun=26, senkou=52, include_chikou=True, offset=0)
 
-    return chart_path
+        ic_df = pd.concat([ic_df, ichimoku[0]], axis=1)
+        ic_df = pd.concat([ic_df, ichimoku[1]], axis=0)
+        ic_df.rename(columns={'ITS_9': 'Conversion',
+                              'IKS_26': 'Baseline',
+                              'ISA_9': 'SpanA', 'ISB_26': 'SpanB',
+                              'ICS_26': 'Lagging'}, inplace=True)
 
+        # We will use 2 dataframes
+        # 1 will contain the fill data between the spans
+        # The other will be stored with the original data in df1
+        df1 = ic_df.copy()
+        amd_df = ic_df.copy()
 
-def ema_BB():
+        fig = go.Figure()
 
-    st_df['bb_ema_21'] = st_df['Close'].ewm(span=21, adjust=False).mean()
+        # Where SpanA is greater than SpanB give label a value of 1 or 0 if not
+        ##amd_df['label'] = np.where(amd_df['SpanA'] > amd_df['SpanB'], 1, 0)
 
-    # Higher and Lower Bands
-    st_df['BB_Ema_High'] = st_df['bb_ema_21'] + (2 * st_df['SD'])
-    st_df['BB_Ema_Low'] = st_df['bb_ema_21'] - (2 * st_df['SD'])
+        # Shift 1 period, compare dataframe for inequality with the cumulative
+        # sum and store in group
+        ##amd_df['group'] = amd_df['label'].ne(amd_df['label'].shift()).cumsum()
 
-    fig = go.Figure()
-    ema21 = go.Scatter(x=st_df['Date'], y=st_df['bb_ema_21'],
-                       line=dict(color='blue', width=1), name="EMA21")
+        # Get a groupby object that contains information on the group
+        ##amd_df = amd_df.groupby('group')
 
-    bb_high = go.Scatter(x=st_df['Date'], y=st_df['BB_Ema_High'],
-                         line=dict(color='green', width=1), name="BB High")
+        # Cycle through the data pertaining to the fill between spans
+        # dfs = []
+        # for name, data in amd_df:
+        #     dfs.append(data)
 
-    bb_low = go.Scatter(x=st_df['Date'], y=st_df['BB_Ema_Low'],
-                        line=dict(color='orange', width=1), name="BB Low")
+        # Add 2 traces to the fig object for each time the spans cross
+        # and then define the fill using fill='tonexty' for the second trace
+        # for df in dfs:
+        #     fig.add_traces(go.Scatter(x=df.index, y=df.SpanA,
+        #                               line=dict(color='rgba(0,0,0,0)')))
 
-    # Add plots to the figure
-    fig.add_trace(candle)
-    fig.add_trace(ema21)
-    fig.add_trace(bb_high)
-    fig.add_trace(bb_low)
+        #     fig.add_traces(go.Scatter(x=df.index, y=df.SpanB,
+        #                               line=dict(color='rgba(0,0,0,0)'),
+        #                               fill='tonexty',
+        #                               fillcolor=get_fill_color(df['label'].iloc[0])))
 
-    # Add title
-    fig.update_layout(title="Bollinger Bands(EMA)")
+        # Create plots for all of the nonfill data
+        baseline = go.Scatter(x=df1['Date'], y=df1['Baseline'],
+                              line=dict(color='pink', width=2), name="Baseline")
 
-    # Get rid of empty dates on the weekend
-    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+        conversion = go.Scatter(x=df1['Date'], y=df1['Conversion'],
+                                line=dict(color='black', width=1), name="Conversion")
 
-    chart_filename = 'EMA_BB_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    plot(fig, filename=chart_path, auto_open=False)
+        lagging = go.Scatter(x=df1['Date'], y=df1['Lagging'],
+                             line=dict(color='purple', width=2, dash='dot'), name="Lagging")
 
-    return chart_path
+        span_a = go.Scatter(x=df1['Date'], y=df1['SpanA'],
+                            line=dict(color='green', width=2, dash='dot'), name="Span A")
 
+        span_b = go.Scatter(x=df1['Date'], y=df1['SpanB'],
+                            line=dict(color='red', width=1, dash='dot'), name="Span B")
 
-# Ichimoku
+        # Add plots to the figure
+        fig.add_trace(candle)
+        fig.add_trace(baseline)
+        fig.add_trace(conversion)
+        fig.add_trace(lagging)
+        fig.add_trace(span_a)
+        fig.add_trace(span_b)
 
-def get_fill_color(label):
-    if label >= 1:
-        return 'rgba(0,250,0,0.4)'
-    else:
-        return 'rgba(250,0,0,0.4)'
+        # Add title
+        fig.update_layout(title="Ichimoku Cloud)")
 
+        chart_filename = 'ichimoku_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
 
-def ichimoku():
-    ic_df = stock_dataset.copy()
+        return chart_path
 
-    ichimoku = pta.ichimoku(high=st_df['High'], low=st_df['Low'], close=st_df['Close'],
-                            tenkan=9, kijun=26, senkou=52, include_chikou=True, offset=0)
 
-    ic_df = pd.concat([ic_df, ichimoku[0]], axis=1)
-    ic_df = pd.concat([ic_df, ichimoku[1]], axis=0)
-    ic_df.rename(columns={'ITS_9': 'Conversion',
-                          'IKS_26': 'Baseline',
-                          'ISA_9': 'SpanA', 'ISB_26': 'SpanB',
-                          'ICS_26': 'Lagging'}, inplace=True)
+if __name__ == "__main__":
+    obj = DataTransformation()
+    obj.vol_close_chart()
 
-    # We will use 2 dataframes
-    # 1 will contain the fill data between the spans
-    # The other will be stored with the original data in df1
-    df1 = ic_df.copy()
-    amd_df = ic_df.copy()
 
-    fig = go.Figure()
+# Custom Chart
+    # def custom_sma_ema(s_period, e_period):
+    #     fig = go.Figure()
 
-    # Where SpanA is greater than SpanB give label a value of 1 or 0 if not
-    ##amd_df['label'] = np.where(amd_df['SpanA'] > amd_df['SpanB'], 1, 0)
+    #     sma = go.Scatter(x=s_data['Date'], y=SMA(s_data, period=s_period),
+    #                      line=dict(color='green', width=1), name="SMA")
 
-    # Shift 1 period, compare dataframe for inequality with the cumulative
-    # sum and store in group
-    ##amd_df['group'] = amd_df['label'].ne(amd_df['label'].shift()).cumsum()
+    #     ema = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=e_period),
+    #                      line=dict(color='green', width=1), name="EMA")
 
-    # Get a groupby object that contains information on the group
-    ##amd_df = amd_df.groupby('group')
+    #     fig.add_trace(candle)
+    #     fig.add_trace(sma)
+    #     fig.add_trace(ema)
 
-    # Cycle through the data pertaining to the fill between spans
-    # dfs = []
-    # for name, data in amd_df:
-    #     dfs.append(data)
+    #     fig.update_layout(title="Custom SMA+EMA Chart")
 
-    # Add 2 traces to the fig object for each time the spans cross
-    # and then define the fill using fill='tonexty' for the second trace
-    # for df in dfs:
-    #     fig.add_traces(go.Scatter(x=df.index, y=df.SpanA,
-    #                               line=dict(color='rgba(0,0,0,0)')))
+    #     # Get rid of empty dates on the weekend
+    #     fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
 
-    #     fig.add_traces(go.Scatter(x=df.index, y=df.SpanB,
-    #                               line=dict(color='rgba(0,0,0,0)'),
-    #                               fill='tonexty',
-    #                               fillcolor=get_fill_color(df['label'].iloc[0])))
-
-    # Create plots for all of the nonfill data
-    baseline = go.Scatter(x=df1['Date'], y=df1['Baseline'],
-                          line=dict(color='pink', width=2), name="Baseline")
-
-    conversion = go.Scatter(x=df1['Date'], y=df1['Conversion'],
-                            line=dict(color='black', width=1), name="Conversion")
-
-    lagging = go.Scatter(x=df1['Date'], y=df1['Lagging'],
-                         line=dict(color='purple', width=2, dash='dot'), name="Lagging")
-
-    span_a = go.Scatter(x=df1['Date'], y=df1['SpanA'],
-                        line=dict(color='green', width=2, dash='dot'), name="Span A")
-
-    span_b = go.Scatter(x=df1['Date'], y=df1['SpanB'],
-                        line=dict(color='red', width=1, dash='dot'), name="Span B")
-
-    # Add plots to the figure
-    fig.add_trace(candle)
-    fig.add_trace(baseline)
-    fig.add_trace(conversion)
-    fig.add_trace(lagging)
-    fig.add_trace(span_a)
-    fig.add_trace(span_b)
-
-    # Add title
-    fig.update_layout(title="Ichimoku Cloud)")
-
-    chart_filename = 'ichimoku_chart.html'
-    chart_path = os.path.join(static_dir, chart_filename)
-    plot(fig, filename=chart_path, auto_open=False)
-
-    return chart_path
+    #     chart_filename = 'SMA+EMA_chart.html'
+    #     chart_path = os.path.join(self.transformation_config.static_dir, chart_filename)
+    #     plot(fig, filename=chart_path, auto_open=False)
+    #     return chart_path
