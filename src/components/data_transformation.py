@@ -36,7 +36,8 @@ class DataTransformation():
         fig.add_trace(stock_plot)
 
         # Plot volume as bar graph
-        fig.add_trace(go.Bar(x=s_data['Date'],y=s_data['Volume']/200000, name='Volume Traded'))
+        fig.add_trace(
+            go.Bar(x=s_data['Date'], y=s_data['Volume']/200000, name='Volume Traded'))
 
         fig.update_xaxes(title="Date", rangeslider_visible=True)
         fig.update_yaxes(title="Price")
@@ -68,7 +69,7 @@ class DataTransformation():
 
     # Simple Moving Avg
 
-    def SMA_chart(self,ticker,s_data,candle):
+    def SMA_chart(self, ticker, s_data, candle):
 
         sma_periods = [20, 50, 100, 200]
 
@@ -111,7 +112,7 @@ class DataTransformation():
 
     # Exponential Moving Avg
 
-    def EMA_chart(self,ticker,s_data,candle):
+    def EMA_chart(self, ticker, s_data, candle):
 
         ema_periods = [5, 9, 21, 50, 100, 200]
 
@@ -161,7 +162,7 @@ class DataTransformation():
 
     # Bollinger Bands
 
-    def sma_BB(self,s_data,candle):
+    def sma_BB(self, s_data, candle):
         st_df = s_data.copy()
 
         # rolling std for calculating the higher band and lower band
@@ -202,8 +203,8 @@ class DataTransformation():
 
         return chart_path
 
-    def ema_BB(self,s_data,candle):
-        
+    def ema_BB(self, s_data, candle):
+
         st_df_e = s_data.copy()
 
         # rolling std for calculating the higher band and lower band
@@ -253,7 +254,7 @@ class DataTransformation():
         else:
             return 'rgba(250,0,0,0.4)'
 
-    def ichimoku(self,s_data,candle):
+    def ichimoku(self, s_data, candle):
         st_df_i = s_data.copy()
         ic_df = s_data.copy()
 
@@ -336,31 +337,37 @@ class DataTransformation():
         return chart_path
 
 
+# Custom Chart
+
+    def custom_sma_ema(self, s_data, candle, s_period, e_period):
+        fig = go.Figure()
+
+        sma_v = s_data['Close'].rolling(window=s_period).mean()
+
+        ema_v = s_data['Close'].ewm(span=e_period, adjust=False).mean()
+
+        sma = go.Scatter(x=s_data['Date'], y=sma_v,
+                         line=dict(color='green', width=1), name="SMA"+str(s_period))
+
+        ema = go.Scatter(x=s_data['Date'], y=ema_v,
+                         line=dict(color='blue', width=1), name="EMA"+str(e_period))
+
+        fig.add_trace(candle)
+        fig.add_trace(sma)
+        fig.add_trace(ema)
+
+        fig.update_layout(title="Custom SMA+EMA Chart")
+
+        # Get rid of empty dates on the weekend
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+
+        chart_filename = 'SMA+EMA_chart.html'
+        chart_path = os.path.join(
+            self.transformation_config.static_dir, chart_filename)
+        plot(fig, filename=chart_path, auto_open=False)
+        return chart_path
+
+
 if __name__ == "__main__":
     obj = DataTransformation()
     obj.vol_close_chart()
-
-
-# Custom Chart
-    # def custom_sma_ema(s_period, e_period):
-    #     fig = go.Figure()
-
-    #     sma = go.Scatter(x=s_data['Date'], y=SMA(s_data, period=s_period),
-    #                      line=dict(color='green', width=1), name="SMA")
-
-    #     ema = go.Scatter(x=s_data['Date'], y=EMA(s_data, period=e_period),
-    #                      line=dict(color='green', width=1), name="EMA")
-
-    #     fig.add_trace(candle)
-    #     fig.add_trace(sma)
-    #     fig.add_trace(ema)
-
-    #     fig.update_layout(title="Custom SMA+EMA Chart")
-
-    #     # Get rid of empty dates on the weekend
-    #     fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
-
-    #     chart_filename = 'SMA+EMA_chart.html'
-    #     chart_path = os.path.join(self.transformation_config.static_dir, chart_filename)
-    #     plot(fig, filename=chart_path, auto_open=False)
-    #     return chart_path

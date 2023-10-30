@@ -7,14 +7,47 @@
 <body>
     {% include "nav.html" %}
 
+
+    <div class="container d-flex align-items-center mt-3">
+        <form class="row g-3" id="chart-form" action="/prediction" method="post">
+    
+            <div class="col-auto">
+                <label for="epo" class="col-form-label">EPOCHS:</label>
+            </div>
+    
+            <div class="col-auto">
+                <input type="number" name="epo" id="epo" class="form-control" required>
+            </div>
+    
+            <div class="col-auto">
+                <label for="fu_days" class="col-form-label">Future Days:</label>
+            </div>
+    
+            <div class="col-auto">
+                <input type="number" name="fu_days" id="fu_days" class="form-control" required>
+            </div>
+    
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary mb-3">Predict Data</button>
+            </div>
+       
+        </form>
+    </div>
+
     <div class="container mt-4">
-        <div class="alert alert-primary" role="alert">
-            <h6 class="mb-0 d-inline">Train RMSE:</h6>
-            <span class="badge badge-secondary ml-2">{{ train_rmse }}</span>
-        </div>
-        <div class="alert alert-primary" role="alert">
-            <h6 class="mb-0 d-inline">Test RMSE:</h6>
-            <span class="badge badge-secondary ml-2">{{ test_rmse }}</span>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="alert alert-primary" role="alert">
+                    <h6 class="mb-0 d-inline">Train RMSE:</h6>
+                    <span class="badge badge-secondary ml-2">{{ train_rmse }}</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-primary" role="alert">
+                    <h6 class="mb-0 d-inline">Test RMSE:</h6>
+                    <span class="badge badge-secondary ml-2">{{ test_rmse }}</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -27,8 +60,7 @@
 
 
     <div class="container mt-4">
-        <h3>Forecasted Data for 30 days</h3>
-
+        <h5><B>Forecasted Data for {{fu_days}} days</B></h5>
         <!-- Create a Bootstrap table to display the data -->
         <table class="table table-bordered table-dark">
             <tbody>

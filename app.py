@@ -83,6 +83,32 @@ def visual():
     return render_template('charts.html', ticker=ticker, close_vol_chart=vol_close_chart_path, candlestick_chart=candlestick_chart_path, sma_chart=sma_chart_path, ema_chart=ema_chart_path)
 
 
+@app.route('/generate_custom_charts')
+def generate_custom_charts():
+    ticker = session.get('ticker')
+    s_data = pd.read_csv(os.path.join(
+        "artifacts/data_ingestion", "raw.csv"))
+    candle = go.Candlestick(x=s_data['Date'], open=s_data['Open'],
+                            high=s_data['High'], low=s_data['Low'],
+                            close=s_data['Close'], name='Candlestick')
+    sma_period = int(request.args.get('sma_period'))
+    ema_period = int(request.args.get('ema_period'))
+
+    obj_t = data_transformation.DataTransformation()
+
+    cus_chart_path = obj_t.custom_sma_ema(
+        s_data, candle, sma_period, ema_period)
+
+    #custom_chart_html = f"<iframe src={{cus_chart_path}} width='1400' height='500'></iframe>"
+
+    custom_chart_html = f"<iframe src='/static/SMA+EMA_chart.html' width='1400' height='500'></iframe>"
+
+    # with open(cus_chart_path, 'r') as html_file:
+    #     chart_content = html_file.read()
+
+    return custom_chart_html
+
+
 @app.route('/indicators')
 def indicators():
     ticker = session.get('ticker')
@@ -100,6 +126,11 @@ def indicators():
 
 @app.route('/prediction', methods=['GET', 'POST'])
 def prediction():
+    epo = request.form.get('epo')
+    fu_days = request.form.get('fu_days')
+    if epo == None:
+        epo = 10
+        fu_days = 30
     train_data = pd.read_csv(os.path.join(
         "artifacts/data_ingestion", "train.csv"))
     test_data = pd.read_csv(os.path.join(
@@ -107,8 +138,8 @@ def prediction():
     ticker = session.get('ticker')
     obj_p = data_modeling.data_model()
     rmse_test_lstm, rmse_train_lstm, act_vs_pred_chart, future_data = obj_p.data_trans(
-        train_data, test_data)
-    return render_template('prediction.html', train_rmse=rmse_train_lstm, test_rmse=rmse_test_lstm, act_vs_pred_chart=act_vs_pred_chart, future_data=future_data)
+        train_data, test_data, epo, fu_days)
+    return render_template('prediction.html', train_rmse=rmse_train_lstm, test_rmse=rmse_test_lstm, act_vs_pred_chart=act_vs_pred_chart, future_data=future_data, fu_days=fu_days)
 
 
 if __name__ == '__main__':

@@ -26,7 +26,11 @@ class data_model:
     #     self.pred_values = None
     #     self.model = None
 
-    def data_trans(self, train_data, test_data):
+    def data_trans(self, train_data, test_data, epo=10, fu_days=30):
+        print(epo)
+        epo = int(epo)
+        fu_days = int(fu_days)
+        print(fu_days)
 
         def create_sequences(data, sequence_length):
             sequences = []
@@ -40,7 +44,7 @@ class data_model:
 
         train_data['Close'] = scaler.fit_transform(
             train_data['Close'].values.reshape(-1, 1))
-        test_data['Close'] = scaler.fit_transform(
+        test_data['Close'] = scaler.transform(
             test_data['Close'].values.reshape(-1, 1))
         sequence_length = 30
 
@@ -67,7 +71,7 @@ class data_model:
 
         model.compile(optimizer="adam", loss="mean_squared_error")
         model.fit(x=X_train, y=y_train, batch_size=50,
-                  epochs=10, validation_data=(X_test, y_test))
+                  epochs=epo, validation_data=(X_test, y_test))
         model = model
 
         pred_test = model.predict(X_test)
@@ -116,7 +120,7 @@ class data_model:
         output_data = []
 
         i = 0
-        prediction_days = 30
+        prediction_days = fu_days
         while(i < prediction_days):
 
             if(len(temp_input_data) > sequence_length):

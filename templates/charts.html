@@ -39,7 +39,7 @@
     <div id="SMA">
         {% if sma_chart is defined and sma_chart is not none%}
         <iframe src="{{ sma_chart }}" width="1400" height="500"></iframe>
-    1   {% endif %}
+        {% endif %}
     </div>
 
     <div id="EMA">
@@ -49,6 +49,90 @@
         {% endif %}
     </div>
 
+    <div class="container d-flex align-items-center">
+        <form class="row g-3" id="chart-form">
 
+            <h4><B>Custom SMA and EMA Chart</B></h4>
+    
+            <div class="col-auto">
+                <label for="sma_period" class="col-form-label">SMA Period:</label>
+            </div>
+    
+            <div class="col-auto">
+                <input type="number" name="sma_period" id="sma_period" class="form-control" required>
+            </div>
+    
+            <div class="col-auto">
+                <label for="ema_period" class="col-form-label">EMA Period:</label>
+            </div>
+    
+            <div class="col-auto">
+                <input type="number" name="ema_period" id="ema_period" class="form-control" required>
+            </div>
+    
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary mb-3">Fetch Stock Data</button>
+            </div>
+        
+       
+        </form>
+    </div>
+    
+
+
+    <!-- <form class="form-container" id="chart-form">
+        <h4><B>Custom SMA and EMA Chart</B></h4>
+        <label for="sma_period">SMA Period:</label>
+        <input type="number" name="sma_period" id="sma_period" required>
+        <label for="ema_period">EMA Period:</label>
+        <input type="number" name="ema_period" id="ema_period" required>
+        <input type="submit" value="Generate Charts">
+    </form> -->
+
+    <div id="custom-charts">
+        <!-- Custom SMA and EMA charts will be inserted here using AJAX -->
+    </div>
+
+
+    <script>
+        console.log("1")
+        // JavaScript for handling form submission and AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('chart-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                generateCustomCharts();
+            });
+        });
+
+        function generateCustomCharts() {
+            console.log("button clicked")
+            const smaPeriod = document.getElementById('sma_period').value;
+            const emaPeriod = document.getElementById('ema_period').value;
+            const chartContainer = document.getElementById('custom-charts');
+
+            // Use AJAX to generate and insert custom charts
+            // You can use JavaScript to make an AJAX request to your Flask route
+
+            // Example using fetch:
+        
+
+            fetch(`/generate_custom_charts?sma_period=${smaPeriod}&ema_period=${emaPeriod}`)
+                .then(response => response.text())
+                .then(data => {
+                    chartContainer.innerHTML = data;  // Update the content, not append
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+    </script>
+
+    <!-- <div>
+        <iframe src="{{ cus_chart_path }}" width="1400" height="500"></iframe>
+    </div> -->
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>
